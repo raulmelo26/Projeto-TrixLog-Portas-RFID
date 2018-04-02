@@ -1,3 +1,10 @@
+ /*
+ * main
+ *
+ * Created: 02/04/2018
+ *  Author: raulmelo-trix
+ */ 
+ 
  
  #define F_CPU 16000000UL
  #include <avr/io.h>
@@ -27,9 +34,7 @@ void unlock() {
 	usart0_putString("Authorized Card!\n");
 	PORTD = 0b00000100; 
 	_delay_ms(1000);
-	PORTD=  0b00000000;
-	_delay_ms(1000); 
-	
+	PORTD=  0b00000000; 
 }
 
 uint8_t str[5];
@@ -37,7 +42,7 @@ uint32_t count;
  
  int main() {
 	 
-	 DDRC &= ~(1<<PORTC3|1<<PORTC2); //(1<<PORTC3|1<<PORTC2|PORTC0);
+	 DDRC &= ~(1<<PORTC3|1<<PORTC2); 
 	 DDRC = DDRC & ~(1<<0);
 	 PORTC |= (1<<PORTC3|1<<PORTC2|1<<PORTC0);
 	 DDRD = 0xFF; 
@@ -51,7 +56,7 @@ uint32_t count;
 	 sei(); //enable global interrupts
 	 
 	 usart0_putString("RFID_Lock started!\n");	
-	 
+	 //QUANTIDADE DE CARTOES JA CADASTRADOS
 	 count = eeprom_read_dword(0);
 	 
 	 while(1) {
@@ -79,11 +84,14 @@ uint32_t count;
 			}
 			rfidReader.dataReceived = 0;
 			rfidReader.state = startBitLow;
-			
+			//MODO DE GRAVAÇÃO
 			if((PINC & (1<<0)) == 0){ 
+				//VERIFICA SE O CARD JÁ É CADASTRADO
 				if(!searchId(rfidReader.id.value)){
+					//MEMORIA ESGOTADA
 					if(count>256){ usart0_putString("Estouro da memória eeprom!\n");}
 					else{
+						//GRAVA O NOVO CARD
 						eeprom_write_dword (count*4, rfidReader.id.value);
 						usart0_putString("Id gravado com sucesso");
 						count++;
@@ -92,7 +100,7 @@ uint32_t count;
 				}
 			}
 		}
-		
+		// LED VERDE - INDICA QUE ENTROU NO MODO DE GRAVAÇÃO
 		if((PINC & (1<<0)) == 0){
 			PORTD = 0b00100000;	
 		} else{
